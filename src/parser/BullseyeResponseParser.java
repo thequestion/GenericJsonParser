@@ -40,7 +40,7 @@ public class BullseyeResponseParser {
 		}
 		
 		String attributeName = arguments[startIndex];
-		if(!jsonObject.has(attributeName))	return null;
+		if(!jsonObject.has(attributeName))	return null;	
 		if(!(startIndex + 1 < arguments.length)){	//next object is null
 			try {
 				return getLeafValue(jsonObject.get(attributeName));
@@ -56,6 +56,7 @@ public class BullseyeResponseParser {
 		if(isIndex(nextArgument)){
 			try{
 				int index = Integer.parseInt(nextArgument.toString());
+				if(jsonObject.isNull(attributeName)) return null;
 				JSONArray array = jsonObject.getJSONArray(attributeName);
 				if(index >= 0 && index < array.length()){
 					nextObject = array.get(index);
@@ -141,7 +142,6 @@ public class BullseyeResponseParser {
 		}
 		return null;
 	}
-
 
 	private boolean isAttribute(Object next) {
 		return !isIndex(next);
