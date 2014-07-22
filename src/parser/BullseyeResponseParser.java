@@ -22,26 +22,23 @@ public class BullseyeResponseParser {
 		try{
 			jsonObject = new JSONObject(rawJson); 
 		}catch(JSONException ex){
-			System.out.println("Invalid JSON string. " + rawJson );
-			ex.printStackTrace();
+			System.out.println("Invalid JSON string: " + rawJson );
 		}
 	}
 	
 	public Object getValue(String... arguments){
-		if(jsonObject == null || arguments == null)	return null;
 		return getValueRecursively(jsonObject, 0, arguments);
-		
 	}
 
 	private Object getValueRecursively(JSONObject jsonObject, int startIndex, String[] arguments) {
-		
-		if(!(startIndex < arguments.length)){ //current index is null
+		if(jsonObject == null || arguments == null)	return null;
+		if(startIndex >= arguments.length){ //argument on current index is null
 			return getLeafValue(jsonObject);	
 		}
 		
 		String attributeName = arguments[startIndex];
-		if(!jsonObject.has(attributeName))	return null;	
-		if(!(startIndex + 1 < arguments.length)){	//next object is null
+		if(!jsonObject.has(attributeName) || jsonObject.isNull(attributeName))	return null;		//attribute not in JSON or attribute's value is null
+		if(startIndex + 1 >= arguments.length){	//argument on current index is not null AND argument on next index is null
 			try {
 				return getLeafValue(jsonObject.get(attributeName));
 			} catch (JSONException e) {
@@ -56,7 +53,6 @@ public class BullseyeResponseParser {
 		if(isIndex(nextArgument)){
 			try{
 				int index = Integer.parseInt(nextArgument.toString());
-				if(jsonObject.isNull(attributeName)) return null;
 				JSONArray array = jsonObject.getJSONArray(attributeName);
 				if(index >= 0 && index < array.length()){
 					nextObject = array.get(index);
@@ -65,19 +61,18 @@ public class BullseyeResponseParser {
 			} catch (JSONException ex){
 				System.out.println("Arguments are invalid. Arguments: " + getArguments(arguments)
 						+ ". A JSON array is expected for this attribute: " + attributeName);
-				ex.printStackTrace();
 			}
  
-		}else if(isAttribute(nextArgument)){
-			try{
-				nextObject = jsonObject.getJSONObject(attributeName);
-				nextStartIndex += 1;
-			}  catch (JSONException ex){
-				System.out.println("Arguments are invalid. Arguments: " + getArguments(arguments)
-						+ ". A JSON object is expected for this attribute: " + attributeName);
-				ex.printStackTrace();
-			}
 		}
+//		else if(isAttribute(nextArgument)){	
+//			try{
+//				nextObject = jsonObject.getJSONObject(attributeName);
+//				nextStartIndex += 1;
+//			}  catch (JSONException ex){
+//				System.out.println("Arguments are invalid. Arguments: " + getArguments(arguments)
+//						+ ". A JSON object is expected for this attribute: " + attributeName);
+//			}
+//		}
 		
 		if(nextObject instanceof JSONObject)
 			return getValueRecursively((JSONObject)nextObject, nextStartIndex, arguments);
@@ -85,7 +80,6 @@ public class BullseyeResponseParser {
 	}
  
 	private String getArguments(String[] arguments) {
-		if(arguments == null) return null;
 		StringBuffer buffer = new StringBuffer();
 		for(String s:arguments){
 			buffer.append(s + " ");
@@ -138,14 +132,13 @@ public class BullseyeResponseParser {
 			return Class.forName("java.lang."+dataTypeString);
 		} catch (ClassNotFoundException e) {
 			System.out.println("Cannot find Class for " + "java.lang." + dataTypeString);
-			e.printStackTrace();
 		}
 		return null;
 	}
 
-	private boolean isAttribute(Object next) {
-		return !isIndex(next);
-	}
+//	private boolean isAttribute(Object next) {
+//		return !isIndex(next);
+//	}
 
 	private boolean isIndex(Object next) {
 		try{
